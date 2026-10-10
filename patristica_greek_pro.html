@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Patristica Greek Pro - Application de Grec Patristique</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gentium+Plus:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            greek: ['Gentium Plus', 'serif'],
+          },
+          colors: {
+            patristic: {
+              50: '#fbf8f2',
+              100: '#f4ede0',
+              200: '#e8d7be',
+              500: '#b8860b',
+              700: '#8b6508',
+              800: '#5c4103',
+              900: '#3a2701',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.4); border-radius: 9999px; }
+    .font-greek { font-family: 'Gentium Plus', serif; }
+  </style>
+</head>
+<body class="bg-stone-100 dark:bg-stone-900 text-stone-800 dark:text-stone-100 h-full flex flex-col font-sans select-none overflow-hidden">
+
+  <!-- En-tête de l'application -->
+  <header class="bg-stone-900 text-amber-100 shadow-md flex-none z-30 border-b border-amber-900/40">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-full bg-amber-700/40 border border-amber-500/50 flex items-center justify-center text-amber-400 font-bold text-xl shadow-inner">
+          ☧
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight leading-tight text-amber-200">Patristica Greek Pro</h1>
+          <p class="text-xs text-amber-400/80 font-medium">Manuel, Exercices & Auto-génération IA</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-2">
+        <button onclick="openApiKeyModal()" class="px-2.5 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-amber-300 text-xs flex items-center space-x-1.5 border border-amber-500/30 transition">
+          <i class="fa-solid fa-key text-xs"></i>
+          <span class="hidden sm:inline">Clé API</span>
+        </button>
+        <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-stone-800 text-amber-300 hover:bg-stone-700 transition">
+          <i id="themeIcon" class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteneur principal -->
+  <main id="appContainer" class="flex-1 overflow-y-auto relative p-3 sm:p-5 max-w-5xl w-full mx-auto pb-20">
+    
+    <!-- ONGLET 1: GRAMMAIRE PROGRESSIVE -->
+    <section id="section-grammar" class="app-tab space-y-4">
+      <div class="bg-white dark:bg-stone-800 rounded-2xl p-4 shadow-sm border border-stone-200 dark:border-stone-700">
+        <h2 class="text-xl font-bold text-amber-900 dark:text-amber-400 mb-1 flex items-center gap-2">
+          <i class="fa-solid fa-graduation-cap text-amber-600"></i> Cours de Grammaire Grecque Patristique
+        </h2>
+        <p class="text-xs text-stone-500 dark:text-stone-400">Progression complète du niveau Débutant à Avancé / Patristique tardive.</p>
+
+        <!-- Niveau & Catégories -->
+        <div class="flex overflow-x-auto space-x-2 mt-4 pb-2" id="grammarCategories">
+          <!-- Injecté par JS -->
+        </div>
+      </div>
+
+      <div id="grammarContent" class="space-y-4">
+        <!-- Contenu de la leçon sélectionnée -->
+      </div>
+    </section>
+
+    <!-- ONGLET 2: TRADUCTION INTERACTIVE & THÈME/VERSION -->
+    <section id="section-translate" class="app-tab hidden space-y-4">
+      <div class="bg-white dark:bg-stone-800 rounded-2xl p-4 shadow-sm border border-stone-200 dark:border-stone-700">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+          <div>
+            <h2 class="text-xl font-bold text-amber-900 dark:text-amber-400 flex items-center gap-2">
+              <i class="fa-solid fa-keyboard text-amber-600"></i> Atelier de Traduction Interactive
+            </h2>
+            <p class="text-xs text-stone-500 dark:text-stone-400">Saisissez votre traduction et Obtenez une correction instantanée ou par l'IA.</p>
+          </div>
+          <select id="exerciseSelector" onchange="loadExercise(this.value)" class="bg-stone-100 dark:bg-stone-700 text-stone-800 dark:text-stone-200 text-sm rounded-xl p-2.5 border border-stone-300 dark:border-stone-600 font-medium outline-none">
+            <!-- Injecté par JS -->
+          </select>
+        </div>
+      </div>
+
+      <!-- Zone d'exercice -->
+      <div class="bg-white dark:bg-stone-800 rounded-2xl p-5 shadow-sm border border-stone-200 dark:border-stone-700 space-y-4">
+        <div class="border-b border-stone-200 dark:border-stone-700 pb-3 flex justify-between items-center">
+          <div>
+            <span id="exAuthor" class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">Auteur</span>
+            <h3 id="exTitle" class="text-lg font-bold text-stone-900 dark:text-stone-100 mt-2">Titre de l'exercice</h3>
+          </div>
+          <span id="exLevel" class="text-xs px-2 py-1 bg-stone-100 dark:bg-stone-700 rounded-lg text-stone-600 dark:text-stone-300 font-medium">Niveau</span>
+        </div>
+
+        <!-- Texte source -->
+        <div class="p-4 bg-amber-50/50 dark:bg-stone-900/60 rounded-xl border border-amber-200/50 dark:border-stone-700/60">
+          <p id="exGreekText" class="font-greek text-2xl leading-relaxed text-stone-900 dark:text-amber-100">
+            <!-- Texte grec -->
+          </p>
+          <p id="exHint" class="text-xs text-stone-500 dark:text-stone-400 mt-2 italic">
+            <!-- Indice grammatical -->
+          </p>
+        </div>
+
+        <!-- Champ de saisie utilisateur -->
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold text-stone-600 dark:text-stone-400">Saisissez votre traduction en français :</label>
+          <textarea id="userTranslationInput" rows="3" placeholder="Écrivez votre traduction ici..." class="w-full p-3 bg-stone-50 dark:bg-stone-900 text-sm rounded-xl border border-stone-300 dark:border-stone-700 outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button onclick="checkUserTranslation()" class="flex-1 py-3 bg-amber-700 hover:bg-amber-800 text-amber-50 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-check"></i> Corriger la traduction
+          </button>
+          <button onclick="getAiDetailedCorrection()" class="py-3 px-4 bg-stone-800 hover:bg-stone-700 text-amber-300 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 border border-amber-500/30">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Correction Détaillée IA
+          </button>
+        </div>
+
+        <!-- Feedback / Correction Box -->
+        <div id="correctionResult" class="hidden bg-stone-50 dark:bg-stone-900 rounded-xl p-4 border border-stone-200 dark:border-stone-700 space-y-2">
+          <!-- Injecté dynamiquement -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ONGLET 3: VOCABULAIRE & LEITNER -->
+    <section id="section-vocab" class="app-tab hidden space-y-4">
+      <div class="bg-white dark:bg-stone-800 rounded-2xl p-4 shadow-sm border border-stone-200 dark:border-stone-700">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+          <div>
+            <h2 class="text-xl font-bold text-amber-900 dark:text-amber-400 flex items-center gap-2">
+              <i class="fa-solid fa-layer-group text-amber-600"></i> Dictionnaire & Flashcards Patristiques
+            </h2>
+            <p class="text-xs text-stone-500 dark:text-stone-400">Répétition espacée du vocabulaire spécialisé.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="setVocabMode('cards')" id="btnModeCards" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600 text-white shadow-sm">Cartes</button>
+            <button onclick="setVocabMode('lexicon')" id="btnModeLexicon" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-300">Lexique</button>
+          </div>
+        </div>
+
+        <div class="flex overflow-x-auto space-x-2 mt-4 pb-1" id="vocabCategorySelector">
+          <!-- Injecté par JS -->
+        </div>
+      </div>
+
+      <!-- Mode Flashcard -->
+      <div id="vocabCardsView" class="space-y-4">
+        <div class="bg-white dark:bg-stone-800 rounded-2xl p-6 shadow-sm border border-stone-200 dark:border-stone-700 flex flex-col items-center text-center min-h-[260px] justify-between relative overflow-hidden">
+          <div class="w-full flex justify-between items-center text-xs text-stone-400 font-medium">
+            <span id="cardCategoryTag">Catégorie</span>
+            <span id="cardProgressTag">1 / 20</span>
+          </div>
+
+          <div id="cardContent" onclick="flipCard()" class="my-auto cursor-pointer p-4 w-full transition-all duration-300">
+            <div id="cardFront">
+              <h3 id="cardGreekWord" class="font-greek text-3xl sm:text-4xl font-bold text-amber-800 dark:text-amber-300 mb-2">οὐσία</h3>
+              <p id="cardPhonetic" class="text-xs text-stone-400 italic">[ousía]</p>
+              <p class="text-xs text-amber-600 dark:text-amber-400 mt-4 font-semibold"><i class="fa-solid fa-rotate mr-1"></i> Cliquez pour voir la traduction</p>
+            </div>
+            <div id="cardBack" class="hidden">
+              <p id="cardDefinition" class="text-lg font-bold text-stone-800 dark:text-stone-100">Essence, substance, être réel</p>
+              <p id="cardGrammar" class="text-xs text-amber-700 dark:text-amber-400 mt-1 font-semibold">Nom, féminin (1ère déclinaison)</p>
+              <p id="cardTheologyNote" class="text-xs text-stone-500 dark:text-stone-400 mt-3 italic bg-amber-50 dark:bg-stone-900 p-2.5 rounded-lg border border-amber-200/50 dark:border-stone-700">Concept clé au concile de Nicée (325).</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 w-full pt-2 border-t border-stone-100 dark:border-stone-700">
+            <button onclick="rateCard('hard')" class="py-2 px-3 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 rounded-xl text-xs font-semibold">À revoir</button>
+            <button onclick="rateCard('good')" class="py-2 px-3 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 rounded-xl text-xs font-semibold">Bien</button>
+            <button onclick="rateCard('easy')" class="py-2 px-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-semibold">Acquis</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode Lexique Liste -->
+      <div id="vocabLexiconView" class="hidden space-y-2">
+        <input type="text" id="lexiconSearch" oninput="filterLexicon(this.value)" placeholder="Rechercher un mot grec ou français..." class="w-full bg-white dark:bg-stone-800 p-3 rounded-xl border border-stone-200 dark:border-stone-700 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+        <div id="lexiconList" class="space-y-2">
+          <!-- Injecté par JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ONGLET 4: TUTEUR IA & AUTO-GÉNÉRATION -->
+    <section id="section-ai" class="app-tab hidden space-y-4">
+      <div class="bg-white dark:bg-stone-800 rounded-2xl p-4 shadow-sm border border-stone-200 dark:border-stone-700 space-y-3">
+        <h2 class="text-xl font-bold text-amber-900 dark:text-amber-400 flex items-center gap-2">
+          <i class="fa-solid fa-brain text-amber-600"></i> Auto-génération & Tuteur IA
+        </h2>
+        <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+          Cette application peut **développer et étendre ses propres données** grâce au modèle IA Gemini. Cliquez sur le bouton ci-dessous pour générer automatiquement de nouveaux exercices de traduction et du vocabulaire supplémentaire qui seront enregistrés dans la mémoire de votre appareil.
+        </p>
+
+        <button onclick="autoGenerateNewContent()" class="w-full py-3.5 bg-gradient-to-r from-amber-700 to-amber-900 text-white rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 hover:opacity-95 transition">
+          <i class="fa-solid fa-sparkles text-amber-300"></i> 🧠 Générer & Ajouter de Nouveaux Exercices / Vocabulaire
+        </button>
+
+        <div id="aiLogBox" class="hidden bg-stone-900 text-amber-300 p-3 rounded-xl text-xs font-mono">
+          <!-- Logs d'auto-génération -->
+        </div>
+      </div>
+
+      <!-- Posez une question au tuteur -->
+      <div class="bg-white dark:bg-stone-800 rounded-2xl p-4 shadow-sm border border-stone-200 dark:border-stone-700 space-y-3">
+        <h3 class="text-sm font-bold text-stone-800 dark:text-stone-200 flex items-center gap-2">
+          <i class="fa-solid fa-comments text-amber-600"></i> Poser une question sur un point de grammaire ou de texte
+        </h3>
+        <textarea id="aiAskInput" rows="3" placeholder="Ex: Quelle est la différence entre l'aoriste et le présent chez Jean Chrysostome ?" class="w-full p-3 bg-stone-50 dark:bg-stone-900 text-xs rounded-xl border border-stone-300 dark:border-stone-700 outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+        <button onclick="askAiQuestion()" class="w-full py-2.5 bg-stone-800 text-amber-300 font-bold text-xs rounded-xl flex items-center justify-center gap-2">
+          <i class="fa-solid fa-paper-plane"></i> Poser la question
+        </button>
+        <div id="aiAnswerBox" class="hidden bg-stone-50 dark:bg-stone-900 p-4 rounded-xl text-xs leading-relaxed space-y-2 border border-stone-200 dark:border-stone-700">
+          <!-- Réponse de l'IA -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal pour clé API -->
+  <div id="apiKeyModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-stone-800 w-full max-w-md rounded-2xl p-5 shadow-2xl border border-stone-200 dark:border-stone-700 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-amber-900 dark:text-amber-400 flex items-center gap-2">
+          <i class="fa-solid fa-key"></i> Clé API Google Gemini
+        </h3>
+        <button onclick="closeApiKeyModal()" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p class="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+        Entrez votre clé API Gemini (gratuite sur Google AI Studio) pour activer l'auto-génération infinie et la correction sur mesure.
+      </p>
+      <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." class="w-full p-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-900 text-sm outline-none focus:ring-2 focus:ring-amber-500">
+      <div class="flex justify-end gap-2">
+        <button onclick="saveApiKey()" class="px-4 py-2 bg-amber-700 text-white text-xs font-bold rounded-xl shadow">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barre de navigation inférieure (Style Application Mobile/APK) -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-stone-900 border-t border-stone-200 dark:border-stone-800 z-40 px-2 py-1.5 shadow-lg">
+    <div class="max-w-md mx-auto grid grid-cols-4 gap-1">
+      <button onclick="switchTab('grammar')" id="nav-grammar" class="nav-btn active flex flex-col items-center py-1.5 px-2 rounded-xl text-amber-700 dark:text-amber-400 transition">
+        <i class="fa-solid fa-graduation-cap text-base mb-0.5"></i>
+        <span class="text-[10px] font-medium">Grammaire</span>
+      </button>
+
+      <button onclick="switchTab('translate')" id="nav-translate" class="nav-btn flex flex-col items-center py-1.5 px-2 rounded-xl text-stone-500 dark:text-stone-400 transition">
+        <i class="fa-solid fa-keyboard text-base mb-0.5"></i>
+        <span class="text-[10px] font-medium">Traduction</span>
+      </button>
+
+      <button onclick="switchTab('vocab')" id="nav-vocab" class="nav-btn flex flex-col items-center py-1.5 px-2 rounded-xl text-stone-500 dark:text-stone-400 transition">
+        <i class="fa-solid fa-layer-group text-base mb-0.5"></i>
+        <span class="text-[10px] font-medium">Vocabulaire</span>
+      </button>
+
+      <button onclick="switchTab('ai')" id="nav-ai" class="nav-btn flex flex-col items-center py-1.5 px-2 rounded-xl text-stone-500 dark:text-stone-400 transition">
+        <i class="fa-solid fa-brain text-base mb-0.5"></i>
+        <span class="text-[10px] font-medium">IA Tuteur</span>
+      </button>
+    </div>
+  </nav>
+
+  <script>
+    /* ==========================================================================
+       BASE DE DONNÉES INITIALE & EXTENSIBLE
+       ========================================================================== */
+
+    const INITIAL_GRAMMAR = [
+      {
+        id: 'level_1_alphabet',
+        level: 'Débutant',
+        title: '1. Alphabet et Prononciation Polytonique',
+        content: `
+          <h4 class="font-bold text-amber-800 dark:text-amber-400 mb-2">L'Alphabet Grec</h4>
+          <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed mb-3">24 lettres, du Alpha (<span class="font-greek font-semibold">Α α</span>) à l'Oméga (<span class="font-greek font-semibold">Ω ω</span>).</p>
+          <div class="bg-amber-50 dark:bg-stone-900 p-3 rounded-xl border border-amber-200/50 dark:border-stone-700 text-xs">
+            <strong>Esprits :</strong> Doux (<span class="font-greek">ἀ</span>) sans son H, Rude (<span class="font-greek">ἁ</span>) prononcé avec aspiration H (ex: <i>hagios</i>).
+          </div>
+        `
+      },
+      {
+        id: 'level_2_declensions',
+        level: 'Intermédiaire',
+        title: '2. Système des Déclinaisons & Cas',
+        content: `
+          <h4 class="font-bold text-amber-800 dark:text-amber-400 mb-2">Les 5 Cas Grammaticaux</h4>
+          <ul class="list-disc pl-5 text-xs text-stone-600 dark:text-stone-300 space-y-1">
+            <li><strong>Nominatif :</strong> Sujet.</li>
+            <li><strong>Vocatif :</strong> Apostrophe / Appel.</li>
+            <li><strong>Accusatif :</strong> Complément d'objet direct (COD).</li>
+            <li><strong>Génitif :</strong> Complément du nom / Appartenance.</li>
+            <li><strong>Datif :</strong> Complément d'attribution (COI / Lieu / Moyen).</li>
+          </ul>
+        `
+      },
+      {
+        id: 'level_3_patristic_syntax',
+        level: 'Avancé',
+        title: '3. Spécificités du Grec Patristique Tardif',
+        content: `
+          <h4 class="font-bold text-amber-800 dark:text-amber-400 mb-2">Formes Avancées de la Koinè Patristique</h4>
+          <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed mb-2"><strong>1. Passivum Divinum :</strong> Utilisation du passif sans agent pour désigner l'action cachée de Dieu.</p>
+          <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed mb-2"><strong>2. Recul de l'Optatif :</strong> Remplacé fréquemment par le Subjonctif avec <span class="font-greek">ἵνα</span>.</p>
+          <p class="text-xs text-stone-600 dark:text-stone-300 leading-relaxed"><strong>3. Atticisme des Cappadociens :</strong> Basile et Grégoire réutilisent les élégances du grec classique pour exprimer la haute théologie.</p>
+        `
+      }
+    ];
+
+    const INITIAL_EXERCISES = [
+      {
+        id: 'ex_1',
+        author: 'Athanase d\'Alexandrie',
+        title: 'Sur la Divinisation',
+        level: 'Intermédiaire',
+        greek: 'Αὐτὸς γὰρ ἐνηνθρώπησεν ἵνα ἡμεῖς θεοποιηθῶμεν.',
+        hint: 'Observez la subordonnée finale introduite par ἵνα + subjonctif aoriste passif.',
+        referenceKeywords: ['lui-même', 'fait homme', 'homme', 'divinisés', 'devenions dieux'],
+        correction: '« Car lui-même s\'est fait homme afin que nous soyons divinisés. »'
+      },
+      {
+        id: 'ex_2',
+        author: 'Évagre le Pontique',
+        title: 'Sur la Prière',
+        level: 'Débutant',
+        greek: 'Εἰ θεολόγος εἶ, προσεύξῃ ἀληθῶς.',
+        hint: 'Conditionnelle simple : εἰ + présent indicatif, suivie du futur.',
+        referenceKeywords: ['si', 'théologien', 'prieras', 'vérité', 'vraiment'],
+        correction: '« Si tu es théologien, tu prieras vraiment. »'
+      }
+    ];
+
+    const INITIAL_VOCAB = [
+      { greek: 'οὐσία', phonetic: 'ousía', grammar: 'Nom, fém.', french: 'Essence, substance', category: 'théologie', note: 'Nicée (325)' },
+      { greek: 'ὑπόστασις', phonetic: 'hypóstasis', grammar: 'Nom, fém.', french: 'Hypostase, personne', category: 'théologie', note: 'Distinction Cappadocienne' },
+      { greek: 'θέωσις', phonetic: 'théōsis', grammar: 'Nom, fém.', french: 'Déification, divinisation', category: 'mystique', note: 'Athanase / Maxime' },
+      { greek: 'ἐπέκτασις', phonetic: 'epéktasis', grammar: 'Nom, fém.', french: 'Élan infini vers Dieu', category: 'mystique', note: 'Grégoire de Nysse' }
+    ];
+
+    // Charger les données (Stockage local + données de base)
+    let exercisesData = JSON.parse(localStorage.getItem('patristica_exercises')) || INITIAL_EXERCISES;
+    let vocabData = JSON.parse(localStorage.getItem('patristica_vocab')) || INITIAL_VOCAB;
+    let userGeminiApiKey = localStorage.getItem('patristica_gemini_key') || '';
+
+    let currentVocabIndex = 0;
+    let activeVocabList = [...vocabData];
+
+    /* ==========================================================================
+       INITIALISATION & UI LOGIC
+       ========================================================================== */
+
+    window.onload = function() {
+      initGrammarModule();
+      initExerciseModule();
+      initVocabModule();
+    };
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.app-tab').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(el => {
+        el.classList.remove('active', 'text-amber-700', 'dark:text-amber-400');
+        el.classList.add('text-stone-500', 'dark:text-stone-400');
+      });
+
+      const activeSection = document.getElementById(`section-${tabId}`);
+      if (activeSection) activeSection.classList.remove('hidden');
+
+      const activeBtn = document.getElementById(`nav-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.add('active', 'text-amber-700', 'dark:text-amber-400');
+      }
+
+      document.getElementById('appContainer').scrollTop = 0;
+    }
+
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      const icon = document.getElementById('themeIcon');
+      if (document.documentElement.classList.contains('dark')) {
+        icon.classList.replace('fa-moon', 'fa-sun');
+      } else {
+        icon.classList.replace('fa-sun', 'fa-moon');
+      }
+    }
+
+    /* ==========================================================================
+       MODULE GRAMMAIRE
+       ========================================================================== */
+
+    function initGrammarModule() {
+      const container = document.getElementById('grammarCategories');
+      container.innerHTML = INITIAL_GRAMMAR.map((item, idx) => `
+        <button onclick="renderGrammar('${item.id}')" class="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition border ${idx === 0 ? 'bg-amber-700 text-white border-amber-700' : 'bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-300 border-stone-200'}" id="gbtn-${item.id}">
+          ${item.title}
+        </button>
+      `).join('');
+
+      renderGrammar(INITIAL_GRAMMAR[0].id);
+    }
+
+    function renderGrammar(id) {
+      const item = INITIAL_GRAMMAR.find(g => g.id === id);
+      if (!item) return;
+
+      document.querySelectorAll('#grammarCategories button').forEach(btn => {
+        btn.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition border bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-300 border-stone-200';
+      });
+
+      const activeBtn = document.getElementById(`gbtn-${id}`);
+      if (activeBtn) activeBtn.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition border bg-amber-700 text-white border-amber-700';
+
+      document.getElementById('grammarContent').innerHTML = `
+        <div class="bg-white dark:bg-stone-800 rounded-2xl p-5 shadow-sm border border-stone-200 dark:border-stone-700 space-y-3">
+          <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 uppercase">${item.level}</span>
+          <h3 class="text-lg font-bold text-stone-900 dark:text-stone-100">${item.title}</h3>
+          <div class="pt-2 border-t border-stone-100 dark:border-stone-700/60">${item.content}</div>
+        </div>
+      `;
+    }
+
+    /* ==========================================================================
+       MODULE TRADUCTION & ATELIER CLAVIER
+       ========================================================================== */
+
+    function initExerciseModule() {
+      const selector = document.getElementById('exerciseSelector');
+      selector.innerHTML = exercisesData.map(ex => `
+        <option value="${ex.id}">${ex.author} - ${ex.title}</option>
+      `).join('');
+
+      if (exercisesData.length > 0) loadExercise(exercisesData[0].id);
+    }
+
+    function loadExercise(id) {
+      const ex = exercisesData.find(e => e.id === id) || exercisesData[0];
+      document.getElementById('exAuthor').textContent = ex.author;
+      document.getElementById('exTitle').textContent = ex.title;
+      document.getElementById('exLevel').textContent = ex.level;
+      document.getElementById('exGreekText').textContent = ex.greek;
+      document.getElementById('exHint').textContent = ex.hint ? `Indice : ${ex.hint}` : '';
+      document.getElementById('userTranslationInput').value = '';
+      document.getElementById('correctionResult').classList.add('hidden');
+    }
+
+    function checkUserTranslation() {
+      const input = document.getElementById('userTranslationInput').value.trim().toLowerCase();
+      const currentId = document.getElementById('exerciseSelector').value;
+      const ex = exercisesData.find(e => e.id === currentId);
+
+      if (!input) {
+        alert('Veuillez écrire votre traduction.');
+        return;
+      }
+
+      // Algorithme de vérification par mots-clés
+      let matched = 0;
+      ex.referenceKeywords.forEach(kw => {
+        if (input.includes(kw.toLowerCase())) matched++;
+      });
+
+      const scoreRatio = matched / ex.referenceKeywords.length;
+      const resultBox = document.getElementById('correctionResult');
+      resultBox.classList.remove('hidden');
+
+      if (scoreRatio >= 0.6) {
+        resultBox.innerHTML = `
+          <div class="text-emerald-700 dark:text-emerald-400 font-bold text-xs flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-base"></i> Excellente traduction !
+          </div>
+          <p class="text-xs text-stone-700 dark:text-stone-300 mt-1"><strong>Traduction de référence :</strong> ${ex.correction}</p>
+        `;
+      } else {
+        resultBox.innerHTML = `
+          <div class="text-amber-700 dark:text-amber-400 font-bold text-xs flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-base"></i> Traduction incomplète ou perfectible.
+          </div>
+          <p class="text-xs text-stone-700 dark:text-stone-300 mt-1"><strong>Traduction de référence :</strong> ${ex.correction}</p>
+        `;
+      }
+    }
+
+    /* ==========================================================================
+       MODULE VOCABULAIRE
+       ========================================================================== */
+
+    function initVocabModule() {
+      renderCurrentFlashcard();
+      renderLexiconList();
+    }
+
+    function renderCurrentFlashcard() {
+      if (vocabData.length === 0) return;
+      const card = vocabData[currentVocabIndex];
+
+      document.getElementById('cardGreekWord').textContent = card.greek;
+      document.getElementById('cardPhonetic').textContent = `[${card.phonetic}]`;
+      document.getElementById('cardDefinition').textContent = card.french;
+      document.getElementById('cardGrammar').textContent = card.grammar;
+      document.getElementById('cardTheologyNote').textContent = card.note;
+      document.getElementById('cardProgressTag').textContent = `${currentVocabIndex + 1} / ${vocabData.length}`;
+
+      document.getElementById('cardFront').classList.remove('hidden');
+      document.getElementById('cardBack').classList.add('hidden');
+    }
+
+    function flipCard() {
+      document.getElementById('cardFront').classList.toggle('hidden');
+      document.getElementById('cardBack').classList.toggle('hidden');
+    }
+
+    function rateCard(rating) {
+      currentVocabIndex = (currentVocabIndex + 1) % vocabData.length;
+      renderCurrentFlashcard();
+    }
+
+    function setVocabMode(mode) {
+      if (mode === 'cards') {
+        document.getElementById('vocabCardsView').classList.remove('hidden');
+        document.getElementById('vocabLexiconView').classList.add('hidden');
+      } else {
+        document.getElementById('vocabLexiconView').classList.remove('hidden');
+        document.getElementById('vocabCardsView').classList.add('hidden');
+      }
+    }
+
+    function renderLexiconList() {
+      document.getElementById('lexiconList').innerHTML = vocabData.map(v => `
+        <div class="p-3 bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700">
+          <div class="flex justify-between items-baseline">
+            <span class="font-greek text-xl font-bold text-amber-800 dark:text-amber-300">${v.greek}</span>
+            <span class="text-[10px] text-stone-400 uppercase">${v.category}</span>
+          </div>
+          <p class="text-xs font-semibold text-stone-700 dark:text-stone-200">${v.french}</p>
+          <p class="text-[11px] text-stone-500 italic">${v.note}</p>
+        </div>
+      `).join('');
+    }
+
+    function filterLexicon(q) {
+      const query = q.toLowerCase();
+      const filtered = vocabData.filter(v => v.greek.includes(query) || v.french.toLowerCase().includes(query));
+      document.getElementById('lexiconList').innerHTML = filtered.map(v => `
+        <div class="p-3 bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700">
+          <div class="flex justify-between items-baseline">
+            <span class="font-greek text-xl font-bold text-amber-800 dark:text-amber-300">${v.greek}</span>
+            <span class="text-[10px] text-stone-400 uppercase">${v.category}</span>
+          </div>
+          <p class="text-xs font-semibold text-stone-700 dark:text-stone-200">${v.french}</p>
+          <p class="text-[11px] text-stone-500 italic">${v.note}</p>
+        </div>
+      `).join('');
+    }
+
+    /* ==========================================================================
+       AUTO-GÉNÉRATION ET IA TUTEUR (GEMINI API)
+       ========================================================================== */
+
+    async function autoGenerateNewContent() {
+      const logBox = document.getElementById('aiLogBox');
+      logBox.classList.remove('hidden');
+      logBox.innerHTML = `> Connexion au moteur IA Gemini... Génération de nouveaux contenus patristiques en cours...`;
+
+      const prompt = `Génère au format JSON uniquement un nouvel exercice de version grec patristique et un mot de vocabulaire théologique.
+      Structure requise :
+      {
+        "exercise": {
+          "id": "ex_gen_${Date.now()}",
+          "author": "Nom Père de l'Église",
+          "title": "Titre court",
+          "level": "Avancé",
+          "greek": "Phrase courte en grec polytonique",
+          "hint": "Indice grammatical",
+          "referenceKeywords": ["mot1", "mot2", "mot3"],
+          "correction": "Traduction française exacte"
+        },
+        "vocab": {
+          "greek": "Mot grec polytonique",
+          "phonetic": "transcription",
+          "grammar": "Genre, déclin.",
+          "french": "Définition",
+          "category": "théologie",
+          "note": "Note patristique"
+        }
+      }`;
+
+      if (!userGeminiApiKey) {
+        setTimeout(() => {
+          logBox.innerHTML = `> [MODE SIMULATION SANS CLÉ API] : Veuillez ajouter votre clé API Gemini pour débloquer l'auto-génération réelle par IA.`;
+        }, 1000);
+        return;
+      }
+
+      try {
+        const rawResponse = await callGeminiApi(prompt, "Tu es un générateur JSON strict de contenus d'apprentissage de grec patristique.");
+        const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+        
+        if (jsonMatch) {
+          const data = JSON.parse(jsonMatch[0]);
+          
+          if (data.exercise) {
+            exercisesData.push(data.exercise);
+            localStorage.setItem('patristica_exercises', JSON.stringify(exercisesData));
+            initExerciseModule();
+          }
+
+          if (data.vocab) {
+            vocabData.push(data.vocab);
+            localStorage.setItem('patristica_vocab', JSON.stringify(vocabData));
+            initVocabModule();
+          }
+
+          logBox.innerHTML = `> ✅ SUCÈS ! 1 Nouvel exercice et 1 nouveau mot de vocabulaire créés et enregistrés dans l'application.`;
+        }
+      } catch (e) {
+        logBox.innerHTML = `> Erreur d'auto-génération : ${e.message}`;
+      }
+    }
+
+    async function getAiDetailedCorrection() {
+      const input = document.getElementById('userTranslationInput').value.trim();
+      const currentId = document.getElementById('exerciseSelector').value;
+      const ex = exercisesData.find(e => e.id === currentId);
+      const resultBox = document.getElementById('correctionResult');
+
+      if (!input) {
+        alert('Écrivez d\'abord votre traduction.');
+        return;
+      }
+
+      resultBox.classList.remove('hidden');
+      resultBox.innerHTML = `<div class="text-xs text-amber-700 flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin"></i> Analyse détaillée par l'IA Gemini...</div>`;
+
+      const prompt = `Corrige la traduction de l'étudiant pour cette phrase en grec patristique :
+      Texte grec : "${ex.greek}"
+      Traduction de l'étudiant : "${input}"
+      Traduction de référence : "${ex.correction}"
+      Sois précis, bienveillant, et explique la syntaxe grecque (cas, temps verbaux).`;
+
+      if (userGeminiApiKey) {
+        try {
+          const res = await callGeminiApi(prompt, "Tu es un professeur expert en grec patristique.");
+          resultBox.innerHTML = `<div class="text-xs leading-relaxed space-y-2 text-stone-700 dark:text-stone-300">${formatMarkdown(res)}</div>`;
+          return;
+        } catch (e) {}
+      }
+
+      // Simulation sans clé
+      setTimeout(() => {
+        resultBox.innerHTML = `
+          <div class="text-xs text-stone-700 dark:text-stone-300 space-y-1">
+            <p><strong>Analyse :</strong> Votre traduction saisie a bien été comparée.</p>
+            <p><strong>Référence :</strong> ${ex.correction}</p>
+            <p class="text-[11px] text-amber-600">Ajoutez une clé API Gemini pour obtenir des conseils syntaxiques au mot près.</p>
+          </div>
+        `;
+      }, 500);
+    }
+
+    async function askAiQuestion() {
+      const q = document.getElementById('aiAskInput').value.trim();
+      const box = document.getElementById('aiAnswerBox');
+      if (!q) return;
+
+      box.classList.remove('hidden');
+      box.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-600"></i> Le tuteur réfléchit...`;
+
+      if (userGeminiApiKey) {
+        try {
+          const res = await callGeminiApi(q, "Tu es un tuteur spécialiste de la grammaire grecque et de la littérature des Pères de l'Église.");
+          box.innerHTML = `<div class="prose dark:prose-invert text-xs">${formatMarkdown(res)}</div>`;
+          return;
+        } catch (e) {}
+      }
+
+      setTimeout(() => {
+        box.innerHTML = `Veuillez enregistrer votre clé API Gemini dans l'en-tête de l'application pour poser des questions en direct au tuteur.`;
+      }, 500);
+    }
+
+    async function callGeminiApi(prompt, systemInstruction) {
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${userGeminiApiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        systemInstruction: { parts: [{ text: systemInstruction }] }
+      };
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Erreur de réponse de l'IA.";
+    }
+
+    function formatMarkdown(text) {
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br>');
+    }
+
+    /* Modal API Key */
+    function openApiKeyModal() {
+      document.getElementById('geminiApiKeyInput').value = userGeminiApiKey;
+      document.getElementById('apiKeyModal').classList.remove('hidden');
+    }
+    function closeApiKeyModal() {
+      document.getElementById('apiKeyModal').classList.add('hidden');
+    }
+    function saveApiKey() {
+      const val = document.getElementById('geminiApiKeyInput').value.trim();
+      userGeminiApiKey = val;
+      localStorage.setItem('patristica_gemini_key', val);
+      closeApiKeyModal();
+    }
+  </script>
+</body>
+</html>
